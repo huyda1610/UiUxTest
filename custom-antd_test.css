@@ -1,0 +1,9 @@
+
+.ant-btn-primary {
+  /* border-color: #0088fe !important; */
+  background: #0088fe !important;
+}
+
+.ant-table table {
+  border-bottom: none !important;
+}

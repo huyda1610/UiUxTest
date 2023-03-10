@@ -9,7 +9,7 @@ import {
   Table,
   Form,
   Input,
-  InputNumber,
+  AutoComplete,
   Select,
   DatePicker,
   Image,
@@ -18,60 +18,50 @@ import {
   Col,
   Empty,
   Modal,
+  Divider
 } from 'antd'
 
-import { SettingOutlined, SearchOutlined, FilterFilled, IdcardOutlined } from '@ant-design/icons'
+import { SettingOutlined, SearchOutlined, FilterFilled, CloseOutlined } from '@ant-design/icons'
 
 import { formatCash, removeAccents } from 'utils' 
 
 import { getProducts } from 'apis/product'
-const columns = [
-  {
-    title: 'Tên sản phẩm',
-    dataIndex: 'name',
-    align: 'center',
-  },
-  {
-    title: 'Ảnh',
-    dataIndex: 'images',
-    align: 'center',
-    render: (url) => <Image src={url[0]} width={150} height={180} />,
-  },
-  {
-    title: 'Giá bán (vnđ)',
-    dataIndex: 'price',
-    align: 'center',
-    render: (price) => formatCash(price,"."),
-  },
-  {
-    title: 'Số lượng bán',
-    dataIndex: 'sale_quantity',
-    align: 'center',
-    render: (_, record) => `${record.sale_quantity} ${record.unit}`,
-  },
-  {
-    title: 'Giảm giá',
-    dataIndex: 'discount',
-    align: 'center',
-    render: (discount) => `${discount} %`,
-  },
-  {
-    title: 'Thuế',
-    dataIndex: 'tax',
-    align: 'center',
-    render: (tax) => `${tax} %`,
-  },
-  {
-    title: 'Thành tiền (vnđ)',
-    dataIndex: 'total',
-    align: 'center',
-    render: (_, record) =>
-    formatCash(
-      (record.price - record.discount * 0.01 * record.price - record.tax * 0.01 * record.price) *
-      record.sale_quantity
-    , "."),
-  },
-]
+
+const renderItem = (item) => ({
+  value: item.name,
+  id: item.product_id,
+  label: (
+    <>
+      <Row justify="center">
+        <Col span={4}>
+          <img
+            alt={item.name}
+            width={'90%'}
+            height={'120'}
+            src={item.images[0]}
+            loading="lazy"
+            style={{border: "1px solid #5f73e2"}}
+          />
+        </Col>
+        <Col span={18}>
+          <Row justify="center">
+            <br />
+            <Col span={24}>
+              <Typography.Text>
+                ID: {item.product_id}
+              </Typography.Text>
+            </Col>
+            <Col span={24}>
+              <Typography.Text strong>{item.name}</Typography.Text>
+            </Col>
+          </Row>
+        </Col>
+        {/* <Divider/> */}
+      </Row>
+      
+    </>
+  ),
+})
 
 const Product = () => {
   const [isLoading, setLoading] = useState(false)
@@ -79,14 +69,15 @@ const Product = () => {
   const [products, setProduct] = useState([])
   const [selectProducts, setSelectProducts] = useState([])
   const [tableData, setTableData] = useState([])
-  const [paramsFilter, setParamsFilter] = useState({ page: 1, page_size: 2 })
+  const [productSearchValue, setProductSearchValue] = useState("")
+  const [paramsFilter, setParamsFilter] = useState({ page: 1, page_size: 20 })
 
   const toggleModal = () => setIsModalOpen(!isModalOpen)
 
   const _getProducts = async () => {
     setLoading(true)
     try {
-      const res = await getProducts()
+      const res = await getProducts(paramsFilter)
       if (res.status === 200) {
         const data = res.data.data.map((item) => {
           let formatData = {}
@@ -106,6 +97,13 @@ const Product = () => {
     }
   }
 
+  const clearCheckBox = (arr) => {
+    arr.map ((item) => {
+      const check = document.getElementById(`Checkbox ${item.name}`)
+      return check && check.checked && check.click()
+    })
+  }
+
   const handleClickCard = (name) => {
     document.getElementById(`Checkbox ${name}`).click()
   }
@@ -121,6 +119,15 @@ const Product = () => {
     setSelectProducts(value)
   }
 
+  const productOnSelect = (value) => {
+    const data = products.find((item) => item.name.includes(value))
+    const check = tableData.findIndex((item) => item.name.includes(value))
+    if (check === -1) {
+      setTableData([...tableData,data])
+    }
+    setProductSearchValue("")
+  }
+
   const checkBoxChange = (e) => {
     let data = [...selectProducts]
     if(e.target.checked) {
@@ -133,17 +140,86 @@ const Product = () => {
   }
 
   const handleClickDone = () => {
-    let data = products.filter(item => selectProducts.includes(item.name))
-    data.sort((a, b) => a.customer_id - b.customer_id)
-    setTableData(data)
+    const data = products.filter(item => selectProducts.includes(item.name))
+    setTableData([...tableData,...data])
+    clearCheckBox(data)
+    setSelectProducts([])
     toggleModal()
   }
 
   useEffect(() => {
     _getProducts()
   }, [])
-  
-  console.log(tableData)
+
+  const handleClickModal = () => {
+    toggleModal()
+  }
+
+  const removeTableItem = (id) => {
+    const data = [...tableData]
+    setTableData(data.filter((item) => item.product_id !== id))
+  }
+
+  const options = products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id)).map((item) => (
+    renderItem(item)
+  ))
+
+  const columns = [
+    {
+      title: 'STT',
+      dataIndex: 'index',
+      align: 'center',
+    },
+    {
+      title: 'Tên sản phẩm',
+      dataIndex: 'name',
+      align: 'center',
+    },
+    {
+      title: 'Ảnh',
+      dataIndex: 'images',
+      align: 'center',
+      render: (url) => <Image src={url[0]} width={150} height={180} />,
+    },
+    {
+      title: 'Giá bán (vnđ)',
+      dataIndex: 'price',
+      align: 'center',
+      render: (price) => formatCash(price,"."),
+    },
+    {
+      title: 'Số lượng bán',
+      dataIndex: 'sale_quantity',
+      align: 'center',
+    },
+    {
+      title: 'Giảm giá',
+      dataIndex: 'discount',
+      align: 'center',
+      render: (discount) => `${discount} %`,
+    },
+    {
+      title: 'Thuế',
+      dataIndex: 'tax',
+      align: 'center',
+      render: (tax) => `${tax} %`,
+    },
+    {
+      title: 'Thành tiền (vnđ)',
+      dataIndex: 'total',
+      align: 'center',
+      render: (_, record) =>
+      formatCash(
+        (record.price - record.discount * 0.01 * record.price - record.tax * 0.01 * record.price) *
+        record.sale_quantity
+      , "."),
+    },
+    {
+      align: 'center',
+      render: (_, record) =><Button type="text" icon={<CloseOutlined />} onClick={() => removeTableItem(record.product_id)} />,
+      width: "5%",
+    },
+  ]
   return (
     <>
       <Modal
@@ -187,19 +263,18 @@ const Product = () => {
           onChange={cardSelectOnChange}
           value={selectProducts}
           filterOption={(input, option) =>
-            removeAccents(option?.value ?? '').toLowerCase().includes(
-              removeAccents(input).toLowerCase()
-            )
+            removeAccents(option?.value ?? '',true).toLowerCase().includes(
+              removeAccents(input,true).toLowerCase())
           }
         >
-          {products.map((item, index) => (
+          {products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id)).map((item, index) => (
             <Select.Option key={index} value={item.name}>
               <Typography.Text strong>{item.name}</Typography.Text>
             </Select.Option>
           ))}
         </Select>
         <Row justify={'center'}>
-          {products.map((item, key) => {
+          {products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id)).map((item, key) => {
             return (
               <Col xs={24} sm={16} md={12} lg={8} xl={6} key={key} style={{ padding: '20px' }}>
                 <Card
@@ -231,6 +306,7 @@ const Product = () => {
               </Col>
             )
           })}
+          {products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id)).length === 0 && <Empty description="Bạn đã chọn hết sản phẩm"/>}
         </Row>
       </Modal>
       <Card
@@ -263,31 +339,28 @@ const Product = () => {
       >
         <Row>
           <Col span={16}>
-            <Input.Group>
-              <Select
-                mode="multiple"
+            <Input.Group compact>
+              <AutoComplete
+                dropdownMatchSelectWidth={500}
                 style={{ width: '85%' }}
-                placeholder={
-                  <>
-                    <SearchOutlined /> Tìm theo tên, mã SKU, hoặc quét mã Barcode...(F3)
-                  </>
-                }
-                size="large"
-                onChange={cardSelectOnChange}
-                value={selectProducts}
+                options= {options}
                 filterOption={(input, option) =>
-                  removeAccents(option?.value ?? '').toLowerCase().includes(
-                    removeAccents(input).toLowerCase()
-                  )
+                  removeAccents(option?.value ?? '',true).toLowerCase().includes(
+                    removeAccents(input,true).toLowerCase())
+                    || removeAccents(option?.id ?? '',true).includes(input)
                 }
+                onSelect={productOnSelect}
+                onChange={(value) => setProductSearchValue(value)}
+                value={productSearchValue}
+                notFoundContent = {products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id)).length === 0 ? "Bạn đã chọn hết sản phẩm" : "Không tìm thấy sản phẩm"}
               >
-                {products.map((item, index) => (
-                  <Select.Option key={index} value={item.name}>
-                    <Typography.Text strong>{item.name}</Typography.Text>
-                  </Select.Option>
-                ))}
-              </Select>
-              <Button size="large" style={{ width: '15%' }} onClick={toggleModal}>
+                <Input 
+                  size="large" 
+                  placeholder="Tìm theo tên, mã SKU, hoặc quét mã Barcode...(F3)" 
+                  prefix={<SearchOutlined />}
+                />
+              </AutoComplete>
+              <Button size="large" style={{ width: '15%' }} onClick={handleClickModal}>
                 Chọn nhanh
               </Button>
             </Input.Group>
@@ -336,8 +409,18 @@ const Product = () => {
           <Table
             size="small"
             columns={columns}
-            dataSource={tableData}
+            dataSource={tableData.map((item, index) => ({ ...item, index: index + 1 }))}
             scroll={{ y: 500, x: 350 }}
+            pagination={{
+              position: ['bottomLeft'],
+              current: paramsFilter.page,
+              defaultPageSize: 3,
+              pageSizeOptions: [1, 2, 3, 4, 5],
+              showQuickJumper: true,
+              onChange: (page, pageSize) =>
+                setParamsFilter({ ...paramsFilter, page: page, page_size: pageSize }),
+              // total: countBusinesses,
+            }}
           />
         )}
       </Card>

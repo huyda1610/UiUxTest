@@ -15,13 +15,13 @@ const { useBreakpoint } = Grid;
 
 const menu = (
   <Menu>
-    <Menu.Item key="1">Menu item 1</Menu.Item>
-    <Menu.Item key="2">Menu item 2</Menu.Item>
+    <Menu.Item key="1">Tạo đơn hàng</Menu.Item>
+    <Menu.Item key="2">Tạo đơn hàng và duyệt</Menu.Item>
   </Menu>
 );
 
 const UiUxTest = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(true)
 
   const toggleModal = () => setIsModalOpen(!isModalOpen)
   const {xl} = useBreakpoint();
@@ -40,18 +40,25 @@ const UiUxTest = () => {
           backgroundRepeat: "no-repeat" 
         }}
       >
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
-        <Space direction="vertical" style={{ display: 'flex' }} align="center">
-          <Typography.Title level={2} style={{ textAlign: 'center' }}>Chỉ với 7 bước nhanh chóng bạn đã có thể tạo đơn và giao hàng</Typography.Title>
-          <Typography.Title level={5}>Cùng khám phá điều bất ngờ tại cuối hướng dẫn này nhé</Typography.Title>
+        <Row align="middle" justify="space-between" style={{ display: 'flex', flexDirection: 'column' }}>
           <br />
           <br />
-          <Button type='primary' size='large' onClick={toggleModal}>Xem hướng dẫn</Button>
-        </Space>
+          <br />
+          <br />
+          <br />
+          <br />
+          <Col span={20}>
+              <Typography.Title level={2} style={{ textAlign: 'center' }}>Chỉ với 7 bước nhanh chóng bạn đã có thể tạo đơn và giao hàng</Typography.Title>
+          </Col>
+          <Col span={24}>
+              <Typography.Text strong>Cùng khám phá điều bất ngờ tại cuối hướng dẫn này nhé</Typography.Text>
+          </Col>
+          <br />
+          <br />
+          <Col span={24}>
+              <Button type='primary' size='large' onClick={toggleModal}>Xem hướng dẫn</Button>
+          </Col>
+        </Row>
       </Modal>
       <Layout>
         <Affix>

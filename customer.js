@@ -19,6 +19,7 @@ import {
   Radio,
   message,
   Popconfirm,
+  Tooltip
 } from 'antd'
 import {
   InfoCircleOutlined,
@@ -327,12 +328,14 @@ const Customer = () => {
         title={<Typography.Title level={4}>Thông tin khách hàng</Typography.Title>}
         extra={
           <Checkbox style={{ paddingTop: 5 }}>
-            <Typography.Title level={4}>
-              PHÁT HÀNH HOÁ ĐƠN ĐIỆN TỬ
-              <a href="">
-                <InfoCircleOutlined style={{ fontSize: '12px', color: '#64a6fa' }} />
-              </a>
-            </Typography.Title>
+            <Space size='large'>
+              <Typography.Title level={4}>
+                PHÁT HÀNH HOÁ ĐƠN ĐIỆN TỬ
+                <Tooltip title="Tick chọn để phát hành hoá đơn điện tử">
+                  <InfoCircleOutlined style={{ fontSize: '12px', color: '#64a6fa' }} />
+                </Tooltip>
+              </Typography.Title>
+            </Space>
           </Checkbox>
         }
       >

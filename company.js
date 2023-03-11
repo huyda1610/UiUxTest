@@ -16,50 +16,12 @@ import { SettingOutlined  } from '@ant-design/icons';
 
 import { Scrollbars } from 'rc-scrollbars';
 
-const data = [
-  {
-    branch_id: 'Công ty A',
-    user_id: 'Công ty Kho Vận SG',
-    source: 'Web',
-    delivery_date: '03-06-2022',
-    sale_order_code: "XYZ01",
-  },
-  {
-    branch_id: 'Công ty B',
-    user_id: 'Công ty Kho Vận SGL',
-    source: 'Mobile',
-    delivery_date: '16-06-2022',
-    sale_order_code: "XYZ02",
-  },
-  {
-    branch_id: 'Công ty C',
-    user_id: 'Công ty Kho Vận Oma',
-    source: 'Web',
-    delivery_date: '08-09-2022',
-    sale_order_code: "XYZ03",
-  },
-  {
-    branch_id: 'Công ty D',
-    user_id: 'Công ty Kho Vận HCM',
-    source: 'Mobile',
-    delivery_date: '16-10-1996',
-    sale_order_code: "XYZ04",
-  },  {
-    branch_id: 'Công ty E',
-    user_id: 'Công ty Kho Vận Alpha',
-    source: 'Web',
-    delivery_date: '37-01-2022',
-    sale_order_code: "XYZ05",
-  },
-  {
-    branch_id: 'Công ty F',
-    user_id: 'Công ty Kho Vận Beta',
-    source: 'Other',
-    delivery_date: '09-12-2022',
-    sale_order_code: "XYZ06",
-  },
+const dataBranch = ['Công ty A','Công ty B','Công ty C','Công ty D', 'Công ty E','Công ty F']
 
-]
+const dataUser = ['Công ty Kho Vận SG','Công ty Kho Vận SGL','Công ty Kho Vận Oma','Công ty Kho Vận HCM','Công ty Kho Vận Alpha','Công ty Kho Vận Beta']
+
+const dataSource = ['Web','Mobile','Other']
+
 const Company = () => {
   return (
     <Card
@@ -92,8 +54,6 @@ const Company = () => {
             alignItems: 'center',
             marginBottom: "2%"
           }}
-          // labelCol={{ span: 4 }}
-          // wrapperCol={{ span: 19 }}
         >
           <Col span={6}>
             <Typography.Title level={5} style={{marginBottom: 0}}>Bán tại</Typography.Title>
@@ -106,11 +66,11 @@ const Company = () => {
                 }
                 size='large'
                 style={{ width: 370 }}
-                defaultValue={data[0].branch_id}
+                defaultValue={dataBranch[0]}
               >
-                {data.map((item, index) => (
-                  <Select.Option key={index} value={item.branch_id}>
-                    {item.branch_id}
+                {dataBranch.map((item, index) => (
+                  <Select.Option key={index} value={item}>
+                    {item}
                   </Select.Option>
                 ))}
               </Select>
@@ -138,11 +98,11 @@ const Company = () => {
                 }
                 size='large'
                 style={{ width: 370 }}
-                defaultValue={data[0].user_id}
+                defaultValue={dataUser[0]}
               >
-                {data.map((item, index) => (
-                  <Select.Option key={index} value={item.user_id}>
-                    {item.user_id}
+                {dataUser.map((item, index) => (
+                  <Select.Option key={index} value={item}>
+                    {item}
                   </Select.Option>
                 ))}
               </Select>
@@ -170,11 +130,11 @@ const Company = () => {
                 }
                 size='large'
                 style={{ width: 370 }}
-                defaultValue={data[0].source}
+                defaultValue={dataSource[0]}
               >
-                {data.map((item, index) => (
-                  <Select.Option key={index} value={item.source}>
-                    {item.source}
+                {dataSource.map((item, index) => (
+                  <Select.Option key={index} value={item}>
+                    {item}
                   </Select.Option>
                 ))}
               </Select>

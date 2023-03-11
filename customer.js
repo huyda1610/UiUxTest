@@ -19,7 +19,10 @@ import {
   Radio,
   message,
   Popconfirm,
-  Tooltip
+  Tooltip,
+  AutoComplete,
+  Descriptions,
+  Divider
 } from 'antd'
 import {
   InfoCircleOutlined,
@@ -27,49 +30,59 @@ import {
   PlusCircleOutlined,
   UserOutlined,
   IdcardOutlined,
+  CloseOutlined
 } from '@ant-design/icons'
 
 import { getCustomers, addCustomer, deleteCustomer, updateCustomer } from 'apis/customer'
 
 import dayjs from 'dayjs';
 
+import { removeAccents } from 'utils'
+
 const dateFormat = "DD-MM-YYYY"
 
-const Customer = () => {
+const renderItem = (item) => ({
+  value: item.customer_id,
+  name: item.last_name,
+  phone: item.phone,
+  label: (
+    <>
+      <Row justify="left" style={{paddingLeft: 15}}>
+        <Col span={1}>
+          <Avatar
+            size={40}
+            style={{ backgroundColor: '#118cfc' }}
+            icon={<UserOutlined />}
+          />
+        </Col>
+        <Col span={23}>
+          <Row justify="center">
+            <Col span={24}>
+              <Typography.Text>
+                {item.last_name ? item.last_name : 'Not defined'}
+              </Typography.Text>
+            </Col>
+            <Col span={24}>
+              <Typography.Text strong>{item.phone}</Typography.Text>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+    </>
+  ),
+})
+
+const Customer = ({getSelectCustomer}) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isLoading, setLoading] = useState(false)
   const [customers, setCustomer] = useState([])
-  const [tableData, setTableData] = useState([])
-  const [open, setOpen] = useState(false)
   const [isUpdate, setUpdate] = useState(false)
-  const [customerId, setCustomerId] = useState(null)
-  const [selectedTags, setSelectedTags] = useState([])
+  const [selectedCustomer, setSelectedCustomer] = useState({})
 
   const toggleModal = () => setIsModalOpen(!isModalOpen)
   const [formBranch] = Form.useForm()
 
-  const onCreate = () => {
-    setUpdate(false)
-    formBranch.resetFields()
-    toggleModal() 
-  }
-
-  const dropdownRender = (menu) => {
-    return (
-      <div>
-        <Button
-          type="text"
-          icon={<PlusCircleOutlined style={{ color: '#118cfc' }} />}
-          onClick={onCreate}
-          style={{ backgroundColor: 'transparent' }}
-        >
-          <Typography.Text style={{ color: '#118cfc' }}>Thêm mới khách hàng</Typography.Text>
-        </Button>
-        {menu}
-      </div>
-    )
-  }
-
+  getSelectCustomer(selectedCustomer)
   const _getCustomers = async () => {
     try {
       const res = await getCustomers()
@@ -104,9 +117,9 @@ const Customer = () => {
   const _updateCustomer = async (body) => {
     setLoading(true)
     try {
-      const res = await updateCustomer(customerId, { ...body, first_name: 'Khách hàng'  })
+      const res = await updateCustomer(body.customer_id, { ...body, first_name: 'Khách hàng'  })
       if (res.status === 200) {
-        message.success(`Thay đổi thành công khách hàng ${body.last_name}`)
+        message.success(`Thay đổi thành công khách hàng ${selectedCustomer.last_name}`)
         formBranch.resetFields()
         toggleModal()
         _getCustomers()
@@ -122,13 +135,12 @@ const Customer = () => {
 
   const _deleteCustomer = async (body) => {
     setLoading(true)
-    const index = tableData.findIndex((item) => item.customer_id === body.customer_id)
     try {
       const res = await deleteCustomer(body.customer_id)
       if (res.status === 200) {
         message.success(`Xoá thành công khách hàng ${body.last_name}`)
+        setSelectedCustomer({})
         _getCustomers()
-        (index !== -1) && setSelectedTags([...selectedTags].slice(index,1))
       } else {
         res.data.message ? message.error(`${res.data.message}`) : message.error('Xoá thất bại')
       }
@@ -139,99 +151,64 @@ const Customer = () => {
     }
   }
 
+  const customerOnSelect = (id) => {
+    const selectCustomer = customers.find((item) => item.customer_id === id)
+    setSelectedCustomer(selectCustomer)
+  }
+
+  const onCreate = () => {
+    setUpdate(false)
+    formBranch.resetFields()
+    toggleModal() 
+  }
+
+  const onUpdate = () => {
+    setUpdate(true)
+    formBranch.setFieldsValue({...selectedCustomer, birthday : dayjs(selectedCustomer.birthday, dateFormat)})
+    toggleModal()
+  }
+
+  const onDelete = () => {
+    _deleteCustomer(selectedCustomer)
+  }
+
+  const modalFinish = (values) => {
+    isUpdate ? _updateCustomer({...values,customer_id: selectedCustomer.customer_id}) : _addCustomer(values)
+  }
+
   useEffect(() => {
     _getCustomers()
   }, [])
 
   useEffect(() => {
-    let data = []
-    selectedTags.map((item) => data.push(customers[item]))
-    data.sort((a, b) => a.customer_id - b.customer_id)
-    setTableData(data)
-  }, [selectedTags,customers])
+    Object.keys(selectedCustomer).length > 0 
+      && setSelectedCustomer([...customers].find((item) => item.customer_id === selectedCustomer.customer_id))
+  }, [customers])
 
-  const modalChange = (values) => {
-    isUpdate ? _updateCustomer(values) : _addCustomer(values)
-  }
 
-  const onUpdate = (id) => {
-    setCustomerId(id)
-    const data = customers.find((item) => item.customer_id === id)
-    formBranch.setFieldsValue({...data,birthday : dayjs('2015/01/01', dateFormat)})
-    setUpdate(true)
-    toggleModal()
-  }
 
-  const handleDelete = (data) => {
-    setCustomerId(data.customer_id)
-    _deleteCustomer(data)
-  }
-
-  const columns = [
+  const options = [
     {
-      title: 'Customer Id',
-      dataIndex: 'customer_id',
-      align: 'center',
-    },
-    {
-      title: 'Name',
-      dataIndex: 'last_name',
-      align: 'center',
-    },
-    {
-      title: 'Phone',
-      dataIndex: 'phone',
-      align: 'center',
-    },
-    {
-      title: 'Type',
-      dataIndex: 'first_name',
-      align: 'center',
-    },
-    {
-      title: 'Birthday',
-      dataIndex: 'birthday',
-      align: 'center',
-    },
-    {
-      title: 'Gender',
-      dataIndex: 'gender',
-      align: 'center',
-    },
-    {
-      title: 'Action',
-      dataIndex: 'action',
-      align: 'center',
-      render: (_, record) => (
-        <Space>
-          <Button type="primary" onClick={() => onUpdate(record.customer_id)}>
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Xoá khách hàng - Hành động này không thể thay đổi được"
-            open={open}
-            onConfirm={() => handleDelete(record)}
-            okButtonProps={{
-              loading: isLoading,
-            }}
-            onCancel={() => setOpen(false)}
-          >
-            <Button onClick={() => setOpen(true)} danger>
-              Xoá
-            </Button>
-          </Popconfirm>
-        </Space>
+      label: (
+        <Button
+          type="text"
+          icon={<PlusCircleOutlined style={{ color: '#118cfc' }} />}
+          onClick={onCreate}
+          style={{ backgroundColor: 'transparent' }}
+        >
+          <Typography.Text style={{ color: '#118cfc' }}>Thêm mới khách hàng</Typography.Text>
+        </Button>
       ),
     },
+    ...customers.map((item) => (renderItem(item)))
   ]
 
   return (
     <>
       <Modal
-        title={<Typography.Title level={4}>{{isUpdate} ? "Cập nhật" : "Thêm"} khách hàng</Typography.Title>}
+        title={<Typography.Title level={4}>{isUpdate ? "Cập nhật" : "Thêm"} khách hàng</Typography.Title>}
         onCancel={toggleModal}
         visible={isModalOpen}
-        // width={1000}
         footer={
           <Row justify="space-between">
             <Col offset={1}>
@@ -254,7 +231,7 @@ const Customer = () => {
                   onClick={() => formBranch.submit()}
                   loading={isLoading}
                 >
-                  {{isUpdate} ? "Cập nhật" : "Thêm"}
+                  {isUpdate ? "Cập nhật" : "Thêm"}
                 </Button>
               </Space>
             </Col>
@@ -266,7 +243,7 @@ const Customer = () => {
           wrapperCol={{ span: 19 }}
           layout="horizontal"
           style={{ maxWidth: 600 }}
-          onFinish={modalChange}
+          onFinish={modalFinish}
           form={formBranch}
         >
           <Form.Item
@@ -339,80 +316,68 @@ const Customer = () => {
           </Checkbox>
         }
       >
-        <Select
-          mode="multiple"
-          style={{ width: '100%' }}
-          placeholder={
-            <>
-              <SearchOutlined /> Tìm theo tên, SĐT, mã khách hàng ... (F4)
-            </>
-          }
-          filterOption={(input, option) =>
-            (option?.phone ?? '').toLowerCase().includes(input.toLowerCase()) ||
-            (option?.customer_id ?? '').toLowerCase().includes(input.toLowerCase()) || 
-            (option?.name ?? '').toLowerCase().includes(input.toLowerCase())
-          }
-          onChange={name => setSelectedTags(name)}
-          value={selectedTags}
-          size="large"
-          optionLabelProp="name"
-          dropdownRender={dropdownRender}
-        >
-          {customers.map((item, index) => (
-            <Select.Option
-              key={index}
-              phone={item.phone}
-              name={item.last_name}
-              id={item.customer_id}
-              style={{ width: '20%', backgroundColor: 'transparent' }}
-            >
-              <Row justify="center">
-                <Col xl={24} xxl={6}>
-                  <Avatar
-                    size={40}
-                    style={{ backgroundColor: '#118cfc' }}
-                    icon={<UserOutlined />}
-                  />
-                </Col>
-                <Col xl={24} xxl={18}>
-                  <Row justify="center">
-                    <Col span={24}>
-                      <Typography.Text>
-                        {item.last_name ? item.last_name : 'Not defined'}
-                      </Typography.Text>
-                    </Col>
-                    <Col span={24}>
-                      <Typography.Text strong>{item.phone}</Typography.Text>
-                    </Col>
-                  </Row>
-                </Col>
-              </Row>
-            </Select.Option>
-          ))}
-        </Select>
-        <br />
-        <br />
-        {tableData.length === 0 ? (
-          <Empty
-            image={<IdcardOutlined />}
-            imageStyle={{
-              fontSize: 120,
-              height: '100%',
-              color: '#e8e9eb',
-            }}
-            description={
-              <Typography.Text style={{ color: '#c7c8ce' }}>
-                Chưa có thông tin khách hàng
-              </Typography.Text>
-            }
-          />
+        {Object.keys(selectedCustomer).length === 0  ? (
+          <>
+            <AutoComplete
+              dropdownMatchSelectWidth={500}
+              style={{ width: '100%' }}
+              options= {options}
+              filterOption={(input, option) => {
+                return removeAccents(option?.name ?? '',true).toLowerCase().includes(
+                  removeAccents(input,true).toLowerCase())
+                  || removeAccents(option?.phone ?? '',true).toLowerCase().includes(
+                    removeAccents(input,true).toLowerCase())
+              }}
+              onSelect={customerOnSelect}
+              >
+              <Input 
+                size="large" 
+                placeholder="Tìm theo tên, SĐT, mã khách hàng ... (F4)" 
+                prefix={<SearchOutlined />}
+            />
+            </AutoComplete>
+            <Empty
+              image={<IdcardOutlined />}
+              imageStyle={{
+                fontSize: 120,
+                height: '100%',
+                color: '#e8e9eb',
+              }}
+              description={
+                <Typography.Text style={{ color: '#c7c8ce' }}>
+                  Chưa có thông tin khách hàng
+                </Typography.Text>
+              }
+            />
+          </>
         ) : (
-          <Table
-            size="small"
-            columns={columns}
-            dataSource={tableData}
-            scroll={{ y: 205, x: 350 }}
-          />
+          <Descriptions 
+            title={
+              <>
+                <Row justify='space-between'>
+                  <Col>
+                    <Typography.Title level={4}>
+                      <a href=""style={{color: "#0088ff"}}>{selectedCustomer.last_name}</a> - {selectedCustomer.phone} <Button type="text" icon={<CloseOutlined />} onClick={() => setSelectedCustomer({})}/>
+                    </Typography.Title>
+                  </Col>
+                  <Col>
+                    <Space>
+                      <Button type="primary" onClick={onUpdate}>Cập nhật</Button>
+                      <Button danger onClick={onDelete}>Xoá</Button>
+                    </Space>
+                  </Col>
+                </Row>
+              </>
+            }
+            size="large"
+            bordered
+          >
+            <Descriptions.Item label="Birthday">{selectedCustomer.birthday}</Descriptions.Item>
+            <Descriptions.Item label="Gender">{selectedCustomer.gender}</Descriptions.Item>
+            <Descriptions.Item label="Email">{selectedCustomer.email ? selectedCustomer.email : "***********"}</Descriptions.Item>
+            <Descriptions.Item label="Create Date">{selectedCustomer.create_date}</Descriptions.Item>
+            <Descriptions.Item label="Last Update">{selectedCustomer.last_update}</Descriptions.Item>
+          </Descriptions>
         )}
       </Card>
     </>

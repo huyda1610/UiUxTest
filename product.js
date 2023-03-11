@@ -18,7 +18,9 @@ import {
   Col,
   Empty,
   Modal,
-  Divider
+  Divider,
+  Pagination,
+  InputNumber
 } from 'antd'
 
 import { SettingOutlined, SearchOutlined, FilterFilled, CloseOutlined } from '@ant-design/icons'
@@ -63,7 +65,7 @@ const renderItem = (item) => ({
   ),
 })
 
-const Product = () => {
+const Product = ({getSelectProduct}) => {
   const [isLoading, setLoading] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [products, setProduct] = useState([])
@@ -72,8 +74,18 @@ const Product = () => {
   const [productSearchValue, setProductSearchValue] = useState("")
   const [paramsFilter, setParamsFilter] = useState({ page: 1, page_size: 20 })
 
-  const toggleModal = () => setIsModalOpen(!isModalOpen)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(50);
+  const itemsPerPage = 10;
 
+  getSelectProduct(tableData)
+
+  const toggleModal = () => setIsModalOpen(!isModalOpen)
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const filterProduct = products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id))
+
+  const cardData = filterProduct.slice(startIndex,endIndex)
   const _getProducts = async () => {
     setLoading(true)
     try {
@@ -89,6 +101,7 @@ const Product = () => {
           return formatData
         })
         setProduct(data)
+        setTotalItems(data.length)
       }
       setLoading(false)
     } catch (error) {
@@ -96,6 +109,10 @@ const Product = () => {
       setLoading(false)
     }
   }
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const clearCheckBox = (arr) => {
     arr.map ((item) => {
@@ -147,10 +164,6 @@ const Product = () => {
     toggleModal()
   }
 
-  useEffect(() => {
-    _getProducts()
-  }, [])
-
   const handleClickModal = () => {
     toggleModal()
   }
@@ -160,7 +173,17 @@ const Product = () => {
     setTableData(data.filter((item) => item.product_id !== id))
   }
 
-  const options = products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id)).map((item) => (
+  const quantityChange = (id,value) => {
+    const updateTableData = [...tableData].map((item) => {
+      if (item.product_id === id) {
+        return {...item, sale_quantity: value}
+      }
+      return item
+    })
+    setTableData(updateTableData)
+  }
+
+  const options = filterProduct.map((item) => (
     renderItem(item)
   ))
 
@@ -191,6 +214,7 @@ const Product = () => {
       title: 'Số lượng bán',
       dataIndex: 'sale_quantity',
       align: 'center',
+      render: (_, record) => <InputNumber value={record.sale_quantity} min={0} onChange={(value) => quantityChange(record.product_id,value)}/>,
     },
     {
       title: 'Giảm giá',
@@ -220,6 +244,11 @@ const Product = () => {
       width: "5%",
     },
   ]
+
+  useEffect(() => {
+    _getProducts()
+  }, [])
+
   return (
     <>
       <Modal
@@ -267,14 +296,25 @@ const Product = () => {
               removeAccents(input,true).toLowerCase())
           }
         >
-          {products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id)).map((item, index) => (
+          {filterProduct.map((item, index) => (
             <Select.Option key={index} value={item.name}>
               <Typography.Text strong>{item.name}</Typography.Text>
             </Select.Option>
           ))}
         </Select>
+        <Row justify='end' style={{paddingTop: 20}}>
+          <Col>
+            <Pagination
+              size='small'
+              current={currentPage}
+              pageSize={itemsPerPage}
+              total={totalItems}
+              onChange={handlePageChange}
+            />
+          </Col>
+        </Row> 
         <Row justify={'center'}>
-          {products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id)).map((item, key) => {
+          {cardData.map((item, key) => {
             return (
               <Col xs={24} sm={16} md={12} lg={8} xl={6} key={key} style={{ padding: '20px' }}>
                 <Card
@@ -302,11 +342,11 @@ const Product = () => {
                   style={{borderColor:"#5f73e2"}}
                 >
                   <Card.Meta title={item.name} />
-                </Card>
+                </Card>               
               </Col>
             )
           })}
-          {products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id)).length === 0 && <Empty description="Bạn đã chọn hết sản phẩm"/>}
+          {filterProduct.length === 0 && <Empty description="Bạn đã chọn hết sản phẩm"/>}
         </Row>
       </Modal>
       <Card
@@ -352,7 +392,7 @@ const Product = () => {
                 onSelect={productOnSelect}
                 onChange={(value) => setProductSearchValue(value)}
                 value={productSearchValue}
-                notFoundContent = {products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id)).length === 0 ? "Bạn đã chọn hết sản phẩm" : "Không tìm thấy sản phẩm"}
+                notFoundContent = {filterProduct.length === 0 ? "Bạn đã chọn hết sản phẩm" : "Không tìm thấy sản phẩm"}
               >
                 <Input 
                   size="large" 

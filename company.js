@@ -40,7 +40,7 @@ const Company = () => {
       }}
       title={<Typography.Title level={4}>Thông tin bổ sung</Typography.Title>}
       extra={
-        <SettingOutlined style={{ fontSize: '35px', color: '#d2d4d7' }}/>
+        <Button size='large' type='text' shape="circle" icon={<SettingOutlined style={{color: "#a3a8af", fontSize: '25px' }}/>}></Button>
       }
     >
       <Scrollbars style={{ height: '330px' }}>

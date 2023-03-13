@@ -22,7 +22,7 @@ import {
   Tooltip,
   AutoComplete,
   Descriptions,
-  Divider
+  Divider,
 } from 'antd'
 import {
   InfoCircleOutlined,
@@ -30,16 +30,16 @@ import {
   PlusCircleOutlined,
   UserOutlined,
   IdcardOutlined,
-  CloseOutlined
+  CloseOutlined,
 } from '@ant-design/icons'
 
 import { getCustomers, addCustomer, deleteCustomer, updateCustomer } from 'apis/customer'
 
-import dayjs from 'dayjs';
+import dayjs from 'dayjs'
 
 import { removeAccents } from 'utils'
 
-const dateFormat = "DD-MM-YYYY"
+const dateFormat = 'DD-MM-YYYY'
 
 const renderItem = (item) => ({
   value: item.customer_id,
@@ -47,20 +47,14 @@ const renderItem = (item) => ({
   phone: item.phone,
   label: (
     <>
-      <Row justify="left" style={{paddingLeft: 15}}>
+      <Row justify="left" style={{ paddingLeft: 15}}>
         <Col span={1}>
-          <Avatar
-            size={40}
-            style={{ backgroundColor: '#118cfc' }}
-            icon={<UserOutlined />}
-          />
+          <Avatar size={40} style={{ backgroundColor: '#118cfc' }} icon={<UserOutlined />} />
         </Col>
         <Col span={23}>
           <Row justify="center">
             <Col span={24}>
-              <Typography.Text>
-                {item.last_name ? item.last_name : 'Not defined'}
-              </Typography.Text>
+              <Typography.Text>{item.last_name ? item.last_name : 'Not defined'}</Typography.Text>
             </Col>
             <Col span={24}>
               <Typography.Text strong>{item.phone}</Typography.Text>
@@ -72,7 +66,7 @@ const renderItem = (item) => ({
   ),
 })
 
-const Customer = ({getSelectCustomer}) => {
+const Customer = ({ getSelectCustomer, clearData }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isLoading, setLoading] = useState(false)
   const [customers, setCustomer] = useState([])
@@ -117,7 +111,7 @@ const Customer = ({getSelectCustomer}) => {
   const _updateCustomer = async (body) => {
     setLoading(true)
     try {
-      const res = await updateCustomer(body.customer_id, { ...body, first_name: 'Khách hàng'  })
+      const res = await updateCustomer(body.customer_id, { ...body, first_name: 'Khách hàng' })
       if (res.status === 200) {
         message.success(`Thay đổi thành công khách hàng ${selectedCustomer.last_name}`)
         formBranch.resetFields()
@@ -159,12 +153,15 @@ const Customer = ({getSelectCustomer}) => {
   const onCreate = () => {
     setUpdate(false)
     formBranch.resetFields()
-    toggleModal() 
+    toggleModal()
   }
 
   const onUpdate = () => {
     setUpdate(true)
-    formBranch.setFieldsValue({...selectedCustomer, birthday : dayjs(selectedCustomer.birthday, dateFormat)})
+    formBranch.setFieldsValue({
+      ...selectedCustomer,
+      birthday: dayjs(selectedCustomer.birthday, dateFormat),
+    })
     toggleModal()
   }
 
@@ -173,7 +170,9 @@ const Customer = ({getSelectCustomer}) => {
   }
 
   const modalFinish = (values) => {
-    isUpdate ? _updateCustomer({...values,customer_id: selectedCustomer.customer_id}) : _addCustomer(values)
+    isUpdate
+      ? _updateCustomer({ ...values, customer_id: selectedCustomer.customer_id })
+      : _addCustomer(values)
   }
 
   useEffect(() => {
@@ -181,38 +180,52 @@ const Customer = ({getSelectCustomer}) => {
   }, [])
 
   useEffect(() => {
-    Object.keys(selectedCustomer).length > 0 
-      && setSelectedCustomer([...customers].find((item) => item.customer_id === selectedCustomer.customer_id))
+    Object.keys(selectedCustomer).length > 0 &&
+      setSelectedCustomer(
+        [...customers].find((item) => item.customer_id === selectedCustomer.customer_id)
+      )
   }, [customers])
 
-
+  useEffect(() => {
+    clearData && setSelectedCustomer({})
+  }, [clearData])
 
   const options = [
     {
       label: (
-        <Button
-          type="text"
-          icon={<PlusCircleOutlined style={{ color: '#118cfc' }} />}
-          onClick={onCreate}
-          style={{ backgroundColor: 'transparent' }}
-        >
-          <Typography.Text style={{ color: '#118cfc' }}>Thêm mới khách hàng</Typography.Text>
-        </Button>
+        <>
+          <Button
+            type="text"
+            size='large'
+            icon={<PlusCircleOutlined style={{ color: '#118cfc' }} />}
+            onClick={onCreate}
+            style={{ backgroundColor: 'transparent' }}
+          >
+            <Typography.Text style={{ color: '#118cfc' }}>Thêm mới khách hàng</Typography.Text>
+          </Button>
+        </>
       ),
     },
-    ...customers.map((item) => (renderItem(item)))
+    ...customers.map((item) => renderItem(item)),
   ]
 
   return (
     <>
       <Modal
-        title={<Typography.Title level={4}>{isUpdate ? "Cập nhật" : "Thêm"} khách hàng</Typography.Title>}
+        title={
+          <Typography.Title level={4}>{isUpdate ? 'Thay đổi' : 'Thêm'} khách hàng</Typography.Title>
+        }
         onCancel={toggleModal}
         visible={isModalOpen}
         footer={
           <Row justify="space-between">
             <Col offset={1}>
-              <Button size="large" onClick={() => formBranch.resetFields()} danger disabled={isUpdate}>
+              <Button
+                size="large"
+                onClick={() => formBranch.resetFields()}
+                danger
+                disabled={isUpdate}
+              >
                 Đặt lại
               </Button>
             </Col>
@@ -231,7 +244,7 @@ const Customer = ({getSelectCustomer}) => {
                   onClick={() => formBranch.submit()}
                   loading={isLoading}
                 >
-                  {isUpdate ? "Cập nhật" : "Thêm"}
+                  {isUpdate ? 'Thay đổi' : 'Thêm'}
                 </Button>
               </Space>
             </Col>
@@ -305,7 +318,7 @@ const Customer = ({getSelectCustomer}) => {
         title={<Typography.Title level={4}>Thông tin khách hàng</Typography.Title>}
         extra={
           <Checkbox style={{ paddingTop: 5 }}>
-            <Space size='large'>
+            <Space size="large">
               <Typography.Title level={4}>
                 PHÁT HÀNH HOÁ ĐƠN ĐIỆN TỬ
                 <Tooltip title="Tick chọn để phát hành hoá đơn điện tử">
@@ -316,25 +329,29 @@ const Customer = ({getSelectCustomer}) => {
           </Checkbox>
         }
       >
-        {Object.keys(selectedCustomer).length === 0  ? (
+        {Object.keys(selectedCustomer).length === 0 ? (
           <>
             <AutoComplete
               dropdownMatchSelectWidth={500}
               style={{ width: '100%' }}
-              options= {options}
+              options={options}
               filterOption={(input, option) => {
-                return removeAccents(option?.name ?? '',true).toLowerCase().includes(
-                  removeAccents(input,true).toLowerCase())
-                  || removeAccents(option?.phone ?? '',true).toLowerCase().includes(
-                    removeAccents(input,true).toLowerCase())
+                return (
+                  removeAccents(option?.name ?? '', true)
+                    .toLowerCase()
+                    .includes(removeAccents(input, true).toLowerCase()) ||
+                  removeAccents(option?.phone ?? '', true)
+                    .toLowerCase()
+                    .includes(removeAccents(input, true).toLowerCase())
+                )
               }}
               onSelect={customerOnSelect}
-              >
-              <Input 
-                size="large" 
-                placeholder="Tìm theo tên, SĐT, mã khách hàng ... (F4)" 
+            >
+              <Input
+                size="large"
+                placeholder="Tìm theo tên, SĐT, mã khách hàng ... (F4)"
                 prefix={<SearchOutlined />}
-            />
+              />
             </AutoComplete>
             <Empty
               image={<IdcardOutlined />}
@@ -351,33 +368,73 @@ const Customer = ({getSelectCustomer}) => {
             />
           </>
         ) : (
-          <Descriptions 
-            title={
-              <>
-                <Row justify='space-between'>
-                  <Col>
-                    <Typography.Title level={4}>
-                      <a href=""style={{color: "#0088ff"}}>{selectedCustomer.last_name}</a> - {selectedCustomer.phone} <Button type="text" icon={<CloseOutlined />} onClick={() => setSelectedCustomer({})}/>
+          <>
+            <Row>
+              <Col span={24}>
+                <div style={{ borderBottom: '1px solid black' }}>
+                  <Row justify="space-between">
+                    <Col>
+                      <Typography.Title level={4}>
+                        <a href="" style={{ color: '#0088ff' }}>
+                          {selectedCustomer.last_name}
+                        </a>{' '}
+                        - {selectedCustomer.phone}{' '}
+                        <Button
+                          type="text"
+                          icon={<CloseOutlined />}
+                          onClick={() => setSelectedCustomer({})}
+                        />
+                      </Typography.Title>
+                    </Col>
+                    <Col>
+                      <Button danger onClick={onDelete}>
+                        Xoá
+                      </Button>
+                    </Col>
+                  </Row>
+                </div>
+              </Col>
+              <Col span={24}>
+                <Row style={{paddingTop: 10}}>
+                  <Col span={17}>
+                    <Typography.Title level={5}>
+                      THÔNG TIN CÁ NHÂN <Button type='text'><Typography.Title level={5} style={{color: "#0088ff"}} onClick={onUpdate}>Thay đổi</Typography.Title></Button>
                     </Typography.Title>
+                    {[{title: "Ngày sinh",value: selectedCustomer.birthday}, {title: "Giới tính",value: selectedCustomer.gender},
+                      {title: "Email",value: selectedCustomer.email ? selectedCustomer.email : "***********"}, {title: "Ngày tạo tài khoản",value: selectedCustomer.create_date},
+                      {title: "Cập nhật sau cùng",value: selectedCustomer.last_update},
+                      ].map((item,index) => (
+                        <Row justify='space-between' index={index}>
+                          <Col span={6}>
+                            <Typography.Text strong>{item.title}: </Typography.Text>
+                          </Col>
+                          <Col span={18}>
+                            {item.value}
+                          </Col>
+                        </Row>
+                      ))
+                    }
                   </Col>
-                  <Col>
-                    <Space>
-                      <Button type="primary" onClick={onUpdate}>Cập nhật</Button>
-                      <Button danger onClick={onDelete}>Xoá</Button>
-                    </Space>
+                  <Col span={7} style={{border: "1px dashed #bfc2c7", borderRadius: 5}}>
+                    {
+                      [{title: "Nợ phải thu",value: 0},{title: "Nợ phải thu",value: 0},
+                      {title: "Nợ phải thu",value: 0},{title: "Nợ phải thu",value: 0}
+                      ].map((item,index) => (
+                        <Row index={index} justify='space-between' style={{padding: 10}}>
+                          <Col span={23}>
+                            <Typography.Text>{item.title}</Typography.Text>
+                          </Col>
+                          <Col span={1}>
+                            {item.value}
+                          </Col>
+                        </Row>
+                      ))
+                    }
                   </Col>
                 </Row>
-              </>
-            }
-            size="large"
-            bordered
-          >
-            <Descriptions.Item label="Birthday">{selectedCustomer.birthday}</Descriptions.Item>
-            <Descriptions.Item label="Gender">{selectedCustomer.gender}</Descriptions.Item>
-            <Descriptions.Item label="Email">{selectedCustomer.email ? selectedCustomer.email : "***********"}</Descriptions.Item>
-            <Descriptions.Item label="Create Date">{selectedCustomer.create_date}</Descriptions.Item>
-            <Descriptions.Item label="Last Update">{selectedCustomer.last_update}</Descriptions.Item>
-          </Descriptions>
+              </Col>
+            </Row>
+          </>
         )}
       </Card>
     </>

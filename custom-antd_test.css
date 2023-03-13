@@ -1,9 +1,25 @@
+.ant-btn {
+  border-radius: 0px !important;
+}
 
 .ant-btn-primary {
-  /* border-color: #0088fe !important; */
   background: #0088fe !important;
+  border: none !important;
 }
 
 .ant-table table {
   border-bottom: none !important;
+}
+
+.ant-btn:hover {
+  background-color: #e6f4ff !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #33a0ff !important;
+}
+
+.ant-checkbox-checked .ant-checkbox-inner {
+  background: #0088fe !important;
+  border-color: #0088fe !important;
 }

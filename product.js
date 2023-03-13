@@ -65,7 +65,7 @@ const renderItem = (item) => ({
   ),
 })
 
-const Product = ({getSelectProduct}) => {
+const Product = ({getSelectProduct,clearData}) => {
   const [isLoading, setLoading] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [products, setProduct] = useState([])
@@ -74,18 +74,11 @@ const Product = ({getSelectProduct}) => {
   const [productSearchValue, setProductSearchValue] = useState("")
   const [paramsFilter, setParamsFilter] = useState({ page: 1, page_size: 20 })
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalItems, setTotalItems] = useState(50);
-  const itemsPerPage = 10;
-
   getSelectProduct(tableData)
 
   const toggleModal = () => setIsModalOpen(!isModalOpen)
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
   const filterProduct = products.filter((item) => !tableData.map((item) => item.product_id).includes(item.product_id))
 
-  const cardData = filterProduct.slice(startIndex,endIndex)
   const _getProducts = async () => {
     setLoading(true)
     try {
@@ -96,12 +89,11 @@ const Product = ({getSelectProduct}) => {
           formatData = {
             ...item,
             tax: Math.floor(Math.random() * 10 + 1),
-            discount: Math.floor(Math.random() * 30),
+            discount: Math.floor(Math.random() * 10 + 1),
           }
           return formatData
         })
         setProduct(data)
-        setTotalItems(data.length)
       }
       setLoading(false)
     } catch (error) {
@@ -109,10 +101,6 @@ const Product = ({getSelectProduct}) => {
       setLoading(false)
     }
   }
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
 
   const clearCheckBox = (arr) => {
     arr.map ((item) => {
@@ -249,6 +237,14 @@ const Product = ({getSelectProduct}) => {
     _getProducts()
   }, [])
 
+  useEffect(() => {
+    if (clearData) {
+      _getProducts()
+      setTableData([])
+      setSelectProducts([])
+    }
+  }, [clearData])
+
   return (
     <>
       <Modal
@@ -302,19 +298,8 @@ const Product = ({getSelectProduct}) => {
             </Select.Option>
           ))}
         </Select>
-        <Row justify='end' style={{paddingTop: 20}}>
-          <Col>
-            <Pagination
-              size='small'
-              current={currentPage}
-              pageSize={itemsPerPage}
-              total={totalItems}
-              onChange={handlePageChange}
-            />
-          </Col>
-        </Row> 
         <Row justify={'center'}>
-          {cardData.map((item, key) => {
+          {filterProduct.map((item, key) => {
             return (
               <Col xs={24} sm={16} md={12} lg={8} xl={6} key={key} style={{ padding: '20px' }}>
                 <Card
